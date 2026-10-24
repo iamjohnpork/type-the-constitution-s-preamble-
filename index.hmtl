@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type the Preamble</title>
+<style>
+  body {
+    font-family: Georgia, serif;
+    background: #f4f4f4;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 10px 26px 14px;
+    box-sizing: border-box;
+    color: #222;
+  }
+  h1 {
+    font-family: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+    font-size: clamp(1.8rem, 7vh, 3rem);
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin: 0 0 12px;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+  }
+  h1 .red   { color: #bf0a30; }
+  h1 .white { color: #ffffff; -webkit-text-stroke: 2px #002868; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.25); }
+  h1 .blue  { color: #002868; }
+  #target {
+    position: relative;
+    background:
+      radial-gradient(ellipse at center, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 65%),
+      linear-gradient(90deg, #d4b072 0%, #efd9a6 7%, #f6e6bd 50%, #efd9a6 93%, #d4b072 100%);
+    box-shadow:
+      inset 0 0 45px rgba(120, 80, 20, 0.4),
+      0 8px 16px rgba(0, 0, 0, 0.3);
+    padding: 24px 32px;
+    margin: 22px 0 28px;
+    font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    font-size: clamp(0.95rem, 2.6vh, 1.15rem);
+    line-height: 1.7;
+    text-align: left;
+    word-spacing: normal;
+    color: #3b2a14;
+  }
+  /* wooden rollers at the top and bottom of the scroll */
+  #target::before,
+  #target::after {
+    content: "";
+    position: absolute;
+    left: -16px;
+    right: -16px;
+    height: 24px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #5a3719 0%, #a8743f 25%, #d9a566 50%, #a8743f 75%, #4f2f14 100%);
+    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+  }
+  #target::before { top: -16px; }
+  #target::after  { bottom: -16px; }
+  .word { padding: 1px 2px; margin: 0 -2px; border-radius: 4px; }
+  .correct { background: #b6f2c0; color: #0a5c1c; }
+  .wrong   { background: #f8b4b4; color: #8a1111; cursor: pointer; }
+  .wrong:hover { background: #f29a9a; }
+  .current { background: #fff3b0; outline: 1px solid #e0c200; }
+  .pending { color: #666; }
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    height: clamp(64px, 13vh, 110px);
+    font-size: 1.1rem;
+    padding: 12px;
+    border: 2px solid #888;
+    border-radius: 8px;
+    resize: none;
+  }
+  textarea:focus { outline: none; border-color: #3b82f6; }
+  #stats { margin-bottom: 10px; font-size: 1.1rem; }
+  button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #3b82f6;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: #2563eb; }
+  .buttons { display: flex; justify-content: space-between; align-items: center; }
+  #mode.hard { background: #bf0a30; }
+  #mode.hard:hover { background: #8f0824; }
+  #intro {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  #intro.show { display: flex; }
+  #intro .box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 26px 30px;
+    max-width: 440px;
+    width: calc(100% - 32px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+  #intro h2 { margin: 0 0 12px; text-align: center; color: #002868; }
+  #intro ul { margin: 0 0 18px; padding-left: 20px; line-height: 1.6; }
+  #intro li { margin-bottom: 6px; }
+  #intro .center { text-align: center; }
+  .g { background: #b6f2c0; color: #0a5c1c; padding: 0 4px; border-radius: 4px; }
+  .r { background: #f8b4b4; color: #8a1111; padding: 0 4px; border-radius: 4px; }
+  .y { background: #fff3b0; padding: 0 4px; border-radius: 4px; }
+  .note { color: #555; font-size: 0.9rem; text-align: center; margin: 0 0 4px; }
+  #modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  #modal.show { display: flex; }
+  #modal .box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 32px;
+    text-align: center;
+    max-width: 340px;
+    width: calc(100% - 32px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+  #modal h2 { margin: 0 0 8px; }
+  #modal .time { font-size: 2.6rem; font-weight: bold; color: #0a5c1c; margin: 8px 0; }
+  #modal .time { margin-bottom: 20px; }
+  #modal .time.lose { font-size: 1.4rem; color: #8a1111; }
+  #modal button { margin: 4px; }
+  #modal button.secondary { background: #888; }
+  #modal button.secondary:hover { background: #666; }
+</style>
+</head>
+<body>
+
+<h1><span class="red">Type</span> <span class="white">the</span> <span class="blue">Preamble</span></h1>
+<div id="target"></div>
+
+<div id="stats"></div>
+<textarea id="input" placeholder="Start typing here..." autofocus></textarea>
+<div class="buttons">
+  <button id="reset">Restart</button>
+  <button id="mode">Difficulty: Easy</button>
+</div>
+
+<div id="intro">
+  <div class="box">
+    <h2>How to Play</h2>
+    <ul>
+      <li>Type the Preamble to the Constitution <b>word for word</b>. Capitalization and punctuation don't matter.</li>
+      <li><b>Easy:</b> <span class="g">green</span> means correct, <span class="r">red</span> means wrong (click a red word to fix it), and <span class="y">yellow</span> is the word you're typing.</li>
+      <li><b>Hard:</b> no color feedback at all, and one wrong word means you lose and start over.</li>
+      <li>Your timer starts on your first keystroke. You finish when every word is correct.</li>
+      <li>Use the buttons at the bottom to restart or switch difficulty.</li>
+    </ul>
+    <div class="center"><button id="introClose">Got it!</button></div>
+  </div>
+</div>
+
+<div id="modal">
+  <div class="box">
+    <h2 id="modalTitle">🎉 Finished!</h2>
+    <div class="time" id="modalTime"></div>
+    <button id="modalAgain">Try again</button>
+    <button id="modalClose" class="secondary">Close</button>
+  </div>
+</div>
+
+<script>
+  const original = "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution for the United States of America.";
+
+  // Strip punctuation and lowercase for comparison
+  const normalize = w => w.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const targetWords = original.split(/\s+/).map(normalize);
+  const displayWords = original.split(/\s+/);
+
+  const targetEl = document.getElementById("target");
+  const inputEl = document.getElementById("input");
+  const statsEl = document.getElementById("stats");
+  const resetBtn = document.getElementById("reset");
+
+  let startTime = null;
+  let endTime = null;
+
+  const modal = document.getElementById("modal");
+  const modalTime = document.getElementById("modalTime");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalCloseBtn = document.getElementById("modalClose");
+  const modalAgainBtn = document.getElementById("modalAgain");
+  const modeBtn = document.getElementById("mode");
+  let hard = false;
+  document.getElementById("modalClose").addEventListener("click", () => modal.classList.remove("show"));
+  document.getElementById("modalAgain").addEventListener("click", () => reset());
+  modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("show"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") modal.classList.remove("show"); });
+
+  function formatTime(ms) {
+    const totalSec = ms / 1000;
+    const m = Math.floor(totalSec / 60);
+    const s = (totalSec - m * 60).toFixed(1).padStart(4, "0");
+    return m > 0 ? `${m}:${s}` : `${totalSec.toFixed(1)}s`;
+  }
+
+  function render() {
+    const text = inputEl.value;
+    const endsWithSpace = /\s$/.test(text);
+    const typed = text.split(/\s+/).filter(w => w.length > 0).map(normalize);
+
+    // Number of fully completed words (followed by a space)
+    const completedCount = endsWithSpace ? typed.length : Math.max(typed.length - 1, 0);
+    const currentIndex = endsWithSpace ? typed.length : typed.length - 1;
+
+    // Hard mode: any wrong word means you lose and restart
+    if (hard && typed.length > 0 && !text.trim().startsWith("/")) {
+      let bad = typed.length > targetWords.length;
+      for (let i = 0; i < Math.min(completedCount, targetWords.length) && !bad; i++) {
+        if (typed[i] !== targetWords[i]) bad = true;
+      }
+      // The word still being typed: wrong once it's as long as the real word but doesn't match
+      if (!bad && !endsWithSpace && typed.length <= targetWords.length) {
+        const i = typed.length - 1;
+        if (typed[i].length >= targetWords[i].length && typed[i] !== targetWords[i]) bad = true;
+      }
+      if (bad) { lose(); return; }
+    }
+
+    let correct = 0, wrong = 0;
+    let html = "";
+
+    displayWords.forEach((word, i) => {
+      let cls = "pending";
+      if (i < completedCount) {
+        if (typed[i] === targetWords[i]) { cls = "correct"; correct++; }
+        else { cls = "wrong"; wrong++; }
+      } else if (i === currentIndex && typed[i] !== undefined) {
+        // Live feedback on the word currently being typed
+        const partial = typed[i];
+        if (targetWords[i].startsWith(partial)) cls = "current";
+        else cls = "wrong";
+      } else if (i === currentIndex + (endsWithSpace ? 0 : 1) && typed.length === 0 && i === 0) {
+        cls = "current";
+      } else if (i === completedCount && typed.length === 0) {
+        cls = "current";
+      }
+      html += `<span class="word ${cls}">${word}</span> `;
+    });
+
+    // If user typed extra words beyond the text, count them as wrong
+    const extra = Math.max(typed.length - targetWords.length, 0);
+    if (extra > 0) wrong += extra;
+
+    if (text.trim().length === 0) {
+      // Box is empty: show the preamble
+      targetEl.textContent = original;
+    } else {
+      // Box has text: hide the preamble and show only what was typed, colored
+      const rawTyped = text.split(/\s+/).filter(w => w.length > 0);
+      let typedHtml = "";
+      rawTyped.forEach((w, i) => {
+        let cls;
+        if (i < completedCount) {
+          cls = (typed[i] === targetWords[i]) ? "correct" : "wrong";
+        } else {
+          // word still being typed
+          cls = (i < targetWords.length && targetWords[i].startsWith(typed[i])) ? "current" : "wrong";
+        }
+        if (hard) cls = "plain"; // hard mode: no red/green/yellow feedback
+        const safe = w.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        typedHtml += `<span class="word ${cls}" data-i="${i}">${safe}</span> `;
+      });
+      targetEl.innerHTML = typedHtml;
+    }
+
+    // Stats
+    if (text.length > 0 && !startTime) startTime = Date.now();
+    let wpm = 0;
+    if (startTime) {
+      const minutes = ((endTime || Date.now()) - startTime) / 60000;
+      wpm = minutes > 0 ? Math.round(correct / minutes) : 0;
+    }
+    const accuracy = (correct + wrong) > 0 ? Math.round((correct / (correct + wrong)) * 100) : 100;
+
+    // Finished = every word typed and every word correct
+    const finished = typed.length === targetWords.length &&
+      typed.every((w, i) => w === targetWords[i]);
+
+    if (finished && !endTime) {
+      endTime = Date.now();
+      showResult("🎉 Finished!", formatTime(endTime - startTime), false);
+    }
+    if (!finished) endTime = null;
+
+    statsEl.innerHTML =
+      `Correct: <b style="color:#0a5c1c">${correct}</b> &nbsp; ` +
+      `Incorrect: <b style="color:#8a1111">${wrong}</b>`;
+    statsEl.style.visibility = hard ? "hidden" : "visible";
+  }
+
+  function reset() {
+    inputEl.value = "";
+    startTime = null;
+    endTime = null;
+    modal.classList.remove("show");
+    render();
+    inputEl.focus();
+  }
+
+  inputEl.addEventListener("input", () => {
+    // Cheat code: type /win to auto-fill the whole Preamble
+    if (inputEl.value.trim().toLowerCase() === "/win") {
+      inputEl.value = original;
+    }
+    render();
+  });
+  // Click a red word to replace it with the correct word
+  targetEl.addEventListener("click", e => {
+    const span = e.target.closest(".word.wrong");
+    if (!span || span.dataset.i === undefined) return;
+    const i = parseInt(span.dataset.i, 10);
+    const words = inputEl.value.split(/\s+/).filter(w => w.length > 0);
+    const wasLast = i === words.length - 1;
+
+    if (i < displayWords.length) {
+      words[i] = displayWords[i];
+    } else {
+      words.splice(i, 1); // extra word beyond the end of the text: remove it
+    }
+
+    let newText = words.join(" ");
+    if (words.length > 0 && (wasLast || /\s$/.test(inputEl.value))) newText += " ";
+    inputEl.value = newText;
+    render();
+    inputEl.focus();
+    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+  });
+
+  resetBtn.addEventListener("click", reset);
+
+  function showResult(title, msg, isLoss) {
+    modalTitle.textContent = title;
+    modalTime.textContent = msg;
+    modalTime.classList.toggle("lose", isLoss);
+    modalAgainBtn.style.display = isLoss ? "none" : "";
+    modalCloseBtn.textContent = isLoss ? "OK" : "Close";
+    modal.classList.add("show");
+  }
+
+  function lose() {
+    reset(); // wipe the textbox and timer
+    showResult("❌ You lose!", "Wrong word. Back to the start.", true);
+    inputEl.blur();
+  }
+
+  modeBtn.addEventListener("click", () => {
+    hard = !hard;
+    modeBtn.textContent = hard ? "Difficulty: Hard" : "Difficulty: Easy";
+    modeBtn.classList.toggle("hard", hard);
+    reset();
+  });
+
+  // Instructions popup
+  const intro = document.getElementById("intro");
+  function closeIntro() {
+    intro.classList.remove("show");
+    inputEl.focus();
+  }
+  document.getElementById("introClose").addEventListener("click", closeIntro);
+  intro.addEventListener("click", e => { if (e.target === intro) closeIntro(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && intro.classList.contains("show")) closeIntro();
+  });
+  // Show the instructions every time the page is opened
+  intro.classList.add("show");
+
+  render();
+</script>
+
+</body>
+</html>
+
+
